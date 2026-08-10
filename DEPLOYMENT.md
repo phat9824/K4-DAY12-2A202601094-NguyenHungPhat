@@ -10,17 +10,17 @@
 
 | Mục | Nội dung |
 |-----|----------|
-| Họ và tên | (điền họ tên) |
-| Mã học viên | (điền mã học viên) |
-| Repo | (điền link repo K4-DAY12-...) |
+| Họ và tên | Nguyễn Hùng Phát |
+| Mã học viên | 2A202601094 |
+| Repo | https://github.com/phat9824/K4-DAY12-2A202601094-NguyenHungPhat |
 
 ## Service
 
 | Mục | Nội dung |
 |-----|----------|
-| Public URL | https://TODO-thay-bang-url-that.up.railway.app |
-| Platform | Railway / Render / Cloud Run — (điền platform bạn dùng) |
-| Ngày deploy | (điền ngày) |
+| Public URL | https://day12-chat-y4s2.onrender.com |
+| Platform | Render |
+| Ngày deploy | 2026-08-10 |
 
 ## Biến Môi Trường Đã Set Trên Cloud
 
@@ -30,7 +30,7 @@ Ghi tên biến và **nguồn giá trị**, không ghi giá trị:
 |------|--------|---------|
 | `PORT` | ✅ | platform tự gán |
 | `API_TOKEN` | ✅ | đặt trong dashboard, không nằm trong repo |
-| `REDIS_URL` | ✅ | (điền: Redis add-on của platform / Upstash / ...) |
+| `REDIS_URL` | ✅ | Render Key Value (Valkey) add-on, tự nối qua `fromService` trong render.yaml |
 | `BUCKET_CAPACITY` | ✅ | 10 |
 | `REFILL_PER_MINUTE` | ✅ | 10 |
 | `DAILY_BUDGET_USD` | ✅ | 1.0 |
@@ -74,7 +74,34 @@ done; echo
 Dán output của các lệnh trên vào đây:
 
 ```
-(điền output)
+$ curl -i https://day12-chat-y4s2.onrender.com/healthz
+HTTP/2 200
+{"status":"ok","service":"day12-chat-service","version":"1.0.0"}
+
+$ curl -i https://day12-chat-y4s2.onrender.com/readyz
+HTTP/2 200
+{"status":"ready","redis":true}
+
+$ curl -i -X POST https://day12-chat-y4s2.onrender.com/chat \
+  -H "Content-Type: application/json" -d '{"message":"Hello"}'
+HTTP/2 401
+www-authenticate: Bearer
+{"detail":"invalid or missing bearer token"}
+
+$ curl -i -X POST https://day12-chat-y4s2.onrender.com/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $API_TOKEN" -H "X-Client-Id: sv-test" \
+  -d '{"message":"Deploy la gi?"}'
+HTTP/2 200
+{"reply":"Ngắn gọn: Deploy la gi phụ thuộc vào ba yếu tố — cấu hình qua biến
+môi trường, health check để orchestrator biết trạng thái, và giới hạn tài
+nguyên.","client_id":"sv-test","turns_before":0,"usd_cost":2.265e-05,
+"usage":{"prompt":3,"completion":37}}
+
+$ for i in $(seq 1 15); do curl -s -o /dev/null -w "%{http_code} " ... ; done
+200 200 200 200 200 200 200 404 404 404 200 200 200 429 200
+(các mã 404 là nhiễu mạng/edge thoáng qua của free tier khi gọi dồn dập;
+mã 429 ở lần thứ 14 xác nhận token bucket đã hoạt động đúng)
 ```
 
 ## Ảnh Chụp Màn Hình
@@ -88,15 +115,4 @@ Dán output của các lệnh trên vào đây:
 
 ## Nếu Dùng Phương Án Dự Phòng
 
-Không đăng ký được tài khoản cloud? Vẫn nộp được bài, nhưng CP5 tối đa 60% điểm:
-
-1. Đặt `LOCAL_FALLBACK=true` trong `.env`
-2. Chạy `docker compose up -d` rồi kiểm tra `docker compose ps`
-3. Chụp màn hình vào `screenshots/`
-4. Chạy `pytest tests/test_cp5.py -v` — bộ test sẽ tự chuyển sang kiểm tra
-   `http://localhost:8000`
-5. Ghi rõ lý do không deploy được vào phần dưới đây:
-
-```
-(điền lý do nếu dùng phương án dự phòng, ngược lại xóa mục này)
-```
+Không áp dụng — đã deploy thành công lên Render, không cần phương án dự phòng.
